@@ -24,6 +24,58 @@ function PawnFindScaleTemplate(ClassID, SpecID)
 	VgerCore.Fail("Failed to find a scale template for class " .. tostring(ClassID) .. " and spec " .. tostring(SpecID))
 end
 
+function PawnGetStatValuesForReference(Template, referenceValue)
+	local ScaleValues, StatName
+
+	local hrPerMp5 = tonumber(referenceValue)
+	local hrPerSp = 0.75 * (1 / 1.8063 + hrPerMp5 / 2.4942)
+	local hrPerCrit = 0.51075 * hrPerSp + 0.1366 * hrPerMp5
+	local hrPerInt = (0.92 * hrPerMp5 + 0.2755 * hrPerCrit + 0.2 * hrPerSp) * 1.2
+	local hrPerMeta = 21 * hrPerInt + 50 * hrPerMp5
+	
+	ScaleValues =
+	{
+		["Strength"] = 0.0,
+		["Agility"] = 0.0,
+		["Intellect"] = hrPerInt,
+		["Stamina"] = 0.0,
+		["Spirit"] = 0.00,
+		["Armor"] = 0.0,
+
+		["HitRating"] = 0.0,
+		["CritRating"] = hrPerCrit,
+		["HasteRating"] = 1.0,
+		["ExpertiseRating"] = 0.0,
+		["SpellPenetration"] = 0.0,
+
+		["SpellPower"] = hrPerSp,
+
+		["ResilienceRating"] = 0.0,
+
+		["MetaSocketEffect"] = hrPerMeta,
+
+		["Mp5"] = hrPerMp5,
+		["Hp5"] = 0.0,
+		["FireResist"] = 0.0,
+		["ShadowResist"] = 0.0,
+		["NatureResist"] = 0.0,
+		["ArcaneResist"] = 0.0,
+		["FrostResist"] = 0.0,
+		["FireSpellDamage"] = 0.0,
+		["ShadowSpellDamage"] = 0.0,
+		["NatureSpellDamage"] = 0.0,
+		["ArcaneSpellDamage"] = 0.0,
+		["FrostSpellDamage"] = 0.0,
+		["HolySpellDamage"] = 0.0,
+	}
+
+	for _, StatName in pairs(PawnNeverUsableStats[Template.ClassID]) do
+		ScaleValues[StatName] = PawnIgnoreStatValue
+	end
+
+	return ScaleValues
+end
+
 -- Returns a starter set of stat values for a given template row returned by PawnFindScaleTemplate.
 function PawnGetStatValuesForTemplate(Template, NoStats)
 	local ScaleValues, StatName

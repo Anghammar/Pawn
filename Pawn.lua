@@ -180,6 +180,16 @@ function PawnInitialize()
 	SLASH_PAWN1 = "/pawn"
 	SlashCmdList["PAWN"] = PawnCommand
 
+	SLASH_HEQV1 = "/heqv"
+	SlashCmdList["HEQV"] = function(msg)
+		--hrPerMp5 = msg
+		--hrPerSp = 0.75 * (1 / 1.8063 + hrPerMp5 / 2.4942)
+		--hrPerCrit = 0.51075 * hrPerSp + 0.1366 * hrPerMp5
+		--hrPerInt = (0.92 * hrPerMp5 + 0.2755 * hrPerCrit + 0.2 * hrPerSp) * 1.2
+		PawnAddSpecificScale(msg)
+		print("Haste per Mp5 set to: "..msg)
+	end
+
 	-- Set any unset options to their default values.  If the user is a new Pawn user, all options
 	-- will be set to default values.  If upgrading, only missing options will be set to default values.
 	PawnInitializeOptions()
@@ -818,6 +828,22 @@ function PawnGetEmptyScale()
 		["UpgradesFollowSpecialization"] = (PawnArmorSpecializationLevel ~= nil),
 		["PerCharacterOptions"] = { },
 		["Values"] = { },
+	}
+end
+
+function PawnGetSpecificScale(referenceValue)
+	local _
+	_, _, ClassID = UnitClass("player")
+	local Template = PawnFindScaleTemplate(ClassID, nil)
+	local ScaleValues = PawnGetStatValuesForReference(Template, referenceValue)
+
+	return
+	{
+		["ClassID"] = ClassID,
+		["SpecID"] = SpecID,
+		["UpgradesFollowSpecialization"] = (PawnArmorSpecializationLevel ~= nil),
+		["PerCharacterOptions"] = { },
+		["Values"] = ScaleValues,
 	}
 end
 
@@ -4767,6 +4793,27 @@ function PawnAddEmptyScale(ScaleName)
 	PawnCommon.Scales[ScaleName].PerCharacterOptions[PawnPlayerFullName] = { }
 	PawnCommon.Scales[ScaleName].PerCharacterOptions[PawnPlayerFullName].Visible = true
 	PawnRecalculateScaleTotal(ScaleName)
+	return true
+end
+
+function PawnAddSpecificScale(referenceValue)
+	if not PawnIsInitialized then VgerCore.Fail("Can't add scales until Pawn is initialized") return end
+
+	local ScaleName = "hastePerMp5 = " .. referenceValue
+	local allScales = PawnGetAllScalesEx()
+	for i, t in pairs(allScales) do
+		if (string.sub(t["Name"], 1, 11) == "hastePerMp5") then
+			PawnDeleteScale(t["Name"])
+		end
+	end
+
+	PawnCommon.Scales[ScaleName] = PawnGetSpecificScale(referenceValue)
+	PawnCommon.Scales[ScaleName].PerCharacterOptions[PawnPlayerFullName] = { }
+	PawnCommon.Scales[ScaleName].PerCharacterOptions[PawnPlayerFullName].Visible = true
+	PawnRecalculateScaleTotal(ScaleName)
+	PawnResetTooltips()
+	PawnUIFrame_ScaleSelector_Refresh()
+	PawnUI_ScalesTab_Refresh()
 	return true
 end
 
